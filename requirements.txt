@@ -1,9 +1,10 @@
-jsonpath_ng==1.7.0
+cryptography==44.0.0
 loguru==0.7.3
 onepush==1.4.0
-pycryptodome==3.21.0
+pydantic==2.10.6
 PyYAML==6.0.2
 qrcode==8.0
 Requests==2.32.3
 requests_toolbelt==1.0.0
 tenacity==9.0.0
+twocaptcha==0.0.1
