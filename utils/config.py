@@ -113,7 +113,7 @@ class Account:
         """微信小程序签到，启用功能意味着你愿意自行承担相关风险"""
 
     def _password(self, password: str):
-        if password == 32:
+        if len(password) == 32:
             return password
         return md5_crypto(password)
 
@@ -204,7 +204,6 @@ class Config:
 
     def to_dict(self):
         """将 Config 转换为字典"""
-        print([vars(account) for account in self.accounts])
         return {
             "preference": vars(self.preference),
             "accounts": [vars(account) for account in self.accounts],
