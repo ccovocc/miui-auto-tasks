@@ -192,6 +192,13 @@ class Login:
         login_url = data["loginUrl"]
         check_url = data["lp"]
         generate_qrcode(login_url)
+        # 设置倒计时的初始时间（例如 30 秒）
+        countdown_time = 30
+        # 动态显示倒计时
+        while countdown_time > 0:
+            print(f"二维码登录倒计时：{countdown_time}秒", flush=True)  # 刷新输出
+            time.sleep(1)
+            countdown_time -= 1
         return check_url
 
     def check_login(self, url: str) -> Tuple[Optional[int], Optional[dict]]:
