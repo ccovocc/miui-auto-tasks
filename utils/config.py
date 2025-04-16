@@ -5,6 +5,7 @@ import os
 import platform
 from hashlib import md5
 from pathlib import Path
+from typing import Literal, Optional, Union
 
 import yaml  # pylint: disable=wrong-import-order
 
@@ -21,7 +22,7 @@ CONFIG_TYPE = "json" if os.path.isfile(DATA_PATH / "config.json") else "yaml"
 CONFIG_PATH = (
     DATA_PATH / f"config.{CONFIG_TYPE}"
     if os.getenv("MIUITASK_CONFIG_PATH") is None
-    else Path(os.getenv("MIUITASK_CONFIG_PATH"))
+    else Path(str(os.getenv("MIUITASK_CONFIG_PATH")))
 )
 """数据文件默认路径"""
 
@@ -80,9 +81,9 @@ class Account:
     ):
         self.uid = uid
         """账户ID 非账户用户名或手机号"""
-        self.password = password
+        self.password = self._password(password)
         """账户密码或其MD5哈希"""
-        self.cookies = cookies or {}
+        self.cookies = self._cookies(cookies) or {}
         """账户登录后的cookies"""
         self.login_user_agent = login_user_agent
         """登录账户时所用浏览器的 User-Agent"""
@@ -111,16 +112,17 @@ class Account:
         self.WxSign = WxSign
         """微信小程序签到，启用功能意味着你愿意自行承担相关风险"""
 
-    def _password(self):
-        if len(self.password) == 32:
-            return self.password
-        return md5_crypto(self.password)
+    def _password(self, password: str):
+        if password == 32:
+            return password
+        return md5_crypto(password)
 
-    def _cookies(self):
-        if isinstance(self.cookies, str):
-            return cookies_to_dict(self.cookies)
-        return self.cookies
+    def _cookies(self, cookies: Union[dict, str]):
+        if isinstance(cookies, str):
+            return cookies_to_dict(cookies)
+        return cookies
 
+    
 
 class OnePush:
     """推送配置"""
@@ -138,13 +140,59 @@ class OnePush:
 class Preference:
     """偏好设置"""
 
-    def __init__(self, geetest_url="", geetest_params=None, geetest_data=None, twocaptcha_api_key="", twocaptcha_userAgent=None, twocaptcha_server="2captcha.cn"):
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def __init__(
+        self,
+        geetest_url="",
+        geetest_method: Literal["post", "get"] = "post",
+        geetest_params: Optional[dict] = None,
+        geetest_data: Optional[dict] = None,
+        geetest_validate_path="$.data.validate",
+        geetest_challenge_path="$.data.challenge",
+        geetest_result_path="$",
+        get_geetest_url="",
+        get_geetest_method: Literal["post", "get"] = "post",
+        get_geetest_params: Optional[dict] = None,
+        get_geetest_data: Optional[dict] = None,
+        get_geetest_validate_path="$",
+        get_geetest_challenge_path="$",
+        get_geetest_try_count=20,
+        twocaptcha_api_key="", twocaptcha_userAgent=None, twocaptcha_server=""
+    ):
         self.geetest_url = geetest_url
+        """极验验证URL"""
+        self.geetest_method = geetest_method
+        """极验请求方法"""
         self.geetest_params = geetest_params or {}
+        """极验自定义params参数"""
         self.geetest_data = geetest_data or {}
+        """极验自定义data参数"""
+        self.geetest_validate_path = geetest_validate_path
+        """极验验证validate的路径"""
+        self.geetest_challenge_path = geetest_challenge_path
+        """极验验证challenge的路径"""
+        self.geetest_result_path = geetest_result_path
+        """极验验证返回参数的路径"""
+        self.get_geetest_url = get_geetest_url
+        """获取极验验证结果的URL"""
+        self.get_geetest_method = get_geetest_method
+        """获取极验验证结果的请求方法"""
+        self.get_geetest_params = get_geetest_params or {}
+        """获取极验验证结果的自定义params参数"""
+        self.get_geetest_data = get_geetest_data or {}
+        """获取极验验证结果的自定义data参数"""
+        self.get_geetest_validate_path = get_geetest_validate_path
+        """获取极验验证validate的路径"""
+        self.get_geetest_challenge_path = get_geetest_challenge_path
+        """获取极验验证challenge的路径"""
+        self.get_geetest_try_count = get_geetest_try_count
+        """获取极验验证结果尝试次数"""
+        # 2captcha api key
         self.twocaptcha_api_key = twocaptcha_api_key
+        # 2captcha userAgent
         self.twocaptcha_userAgent = twocaptcha_userAgent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36 Edg/119.0.0.0"
         self.twocaptcha_server = twocaptcha_server
+
 
 class Config:
     """插件数据"""
@@ -156,6 +204,7 @@ class Config:
 
     def to_dict(self):
         """将 Config 转换为字典"""
+        print([vars(account) for account in self.accounts])
         return {
             "preference": vars(self.preference),
             "accounts": [vars(account) for account in self.accounts],
