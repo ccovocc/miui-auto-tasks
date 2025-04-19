@@ -232,7 +232,7 @@ class Login:
             return None, None
 
     def checkin_info(self) -> Union[Dict[str, str], bool]:
-        """获取公告消息"""
+        """获取公告消息并提取用户名"""
         headers = {
             "Accept": "*/*",
             "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8,en-GB;q=0.7,en-US;q=0.6",
@@ -249,7 +249,33 @@ class Login:
             "sec-ch-ua-mobile": "?0",
             "sec-ch-ua-platform": '"Windows"',
         }
+
+        #URL 和参数（用于获取用户信息）
+        url = "https://api-alpha.vip.miui.com/api/community/mine/home/user"
+        params = {
+            "ref": "vipAccountShortcut",
+            "pathname": "/mio/personalInfo",
+            "version": "dev.20250116",
+            "miui_vip_a_ph": self.cookies["miui_vip_a_ph"]
+        }
+
         try:
+            # 发送 GET 请求获取数据（获取用户信息）
+            response = get(url, params=params, cookies=self.cookies, headers=headers)
+            log.debug(response.text)
+            data: dict = response.json()
+
+            # 打印整个响应数据
+            log.debug(f"API 响应数据: {data}")
+
+            # 提取用户名（字段名 "miNikeName"）
+            entity = data.get("entity", {})
+            if not entity:
+                log.warning("没有找到 'entity' 字段")
+            username = entity.get("miNikeName", "未知用户")
+            log.info(f"用户名: {username}")
+
+            # 公告信息获取逻辑
             params = {
                 "ref": "",
                 "pathname": "/mio/checkIn",
@@ -264,7 +290,12 @@ class Login:
                 headers=headers,
             )
             log.debug(response.text)
-            data: dict = response.json()  # pylint: disable=no-member
+            data: dict = response.json()
+
+            # 输出签到信息列表
             log.info(",".join(data.get("entity", {}).get("checkinInfoList", ["异常"])))
-        except Exception:  # pylint: disable=broad-exception-caught
+
+        except Exception:
             log.exception("获取用户信息失败")
+            return False
+        return True
