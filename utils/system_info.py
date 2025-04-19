@@ -17,10 +17,6 @@ def print_info():
     log.info(f"MIUI-AUTO-TASK {VERSION}")
     log.info("---------- 系统信息 -------------")
     system_info()
-    log.info("---------- 项目信息 -------------")
-    log.info("这是一个免费且开源的项目，如果你是付费购买获得请务必退款")
-    log.info("项目地址：https://github.com/0-8-4/miui-auto-tasks")
-    log.info("欢迎 star，感谢所有项目贡献者，已经提交issues的人，帮助项目发展的人")
     log.info("---------- 脚本日志 -------------")
 
 
